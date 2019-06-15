@@ -94,9 +94,9 @@ def lambda_handler(event, _):
     }
 
 
-lambda_handler(
-    {
-        'Records': [{'body': {'id': '1'}}, {'body': {'id': '2'}}, {'body': {'id': '3'}}, {'body': {'id': '4'}}, {'body': {'id': '5'}}, {'body': {'id': '6'}}]
-    },
-    None
-)
+# lambda_handler(
+#     {
+#         'Records': [{'body': {'id': '1'}}, {'body': {'id': '2'}}, {'body': {'id': '3'}}, {'body': {'id': '4'}}, {'body': {'id': '5'}}, {'body': {'id': '6'}}]
+#     },
+#     None
+# )
