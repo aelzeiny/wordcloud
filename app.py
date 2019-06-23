@@ -1,10 +1,23 @@
 from functools import wraps
 from flask import Flask, request, jsonify
+import boto3
 import os
 import pymysql
-
+from json import dumps
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, origins="http://localhost:3000")
+
+
+sqs = boto3.client(
+    'sqs',
+    # Lambda will provide these
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+    aws_session_token=os.getenv('AWS_SESSION_TOKEN'),
+    region_name=os.getenv('AWS_REGION_NAME', 'us-east-1')
+)
 
 db = pymysql.connect(
     host=os.getenv('db_host', 'localhost'),
@@ -13,6 +26,8 @@ db = pymysql.connect(
     user=os.getenv('db_user', 'root'),
     passwd=os.getenv('db_pass', '')
 )
+
+MAX_WORDCLOUD_LENGTH = 100000000;
 
 
 def json_response(func):
@@ -25,6 +40,7 @@ def json_response(func):
             answer = {'status': 'ERROR', 'payload': None, 'message': str(e)}
             print(e)
         return jsonify(answer)
+
     return decorator
 
 
@@ -33,15 +49,23 @@ def json_response(func):
 def get_wordcloud_status(cloud_id):
     with db.cursor(pymysql.cursors.DictCursor) as cur:
         cur.execute("SELECT * FROM word_cloud WHERE id = %s", (cloud_id,))
-        all_clouds = cur.fetchone()
-    return all_clouds
+        cloud_status = cur.fetchone()
+    return cloud_status
 
 
 @app.route('/clouds', methods=('GET',))
 @json_response
 def list_wordclouds():
     with db.cursor(pymysql.cursors.DictCursor) as cur:
-        cur.execute("SELECT * FROM word_cloud WHERE is_generated = true")
+        cur.execute("""
+            SELECT
+                id, title, text, created, s3_path, updated
+            FROM
+                word_cloud
+            WHERE
+                is_generated = true
+            ORDER BY updated DESC
+        """)
         all_clouds = cur.fetchall()
     return all_clouds
 
@@ -50,11 +74,21 @@ def list_wordclouds():
 @json_response
 def process_wordcloud():
     json = request.json
-    values_tuple = (json['text'], False)
+    title, text = json['title'], json['text']
+    if len(title) == 0 or len(text) == 0:
+        raise ValueError('Title or Text cannot be empty!')
+    if len(text) > MAX_WORDCLOUD_LENGTH or len(title) >= 256:
+        raise ValueError('Title or Text is too long')
+    values_tuple = (title, text, False)
     with db.cursor(pymysql.cursors.DictCursor) as cur:
-        cur.execute("INSERT INTO word_cloud (text, is_generated) VALUES (%s, %s)", values_tuple)
+        cur.execute("INSERT INTO word_cloud (title, text, is_generated) VALUES (%s, %s, %s)", values_tuple)
         new_cloud_id = cur.lastrowid
         db.commit()
+    # Send Message to our queuing system, which will process the text
+    sqs.send_message(
+        QueueUrl='https://sqs.us-east-1.amazonaws.com/295528006637/wordclouds',
+        MessageBody=dumps({'id': new_cloud_id})
+    )
     return {'id': new_cloud_id}
 
 

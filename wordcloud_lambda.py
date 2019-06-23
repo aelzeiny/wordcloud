@@ -12,6 +12,7 @@ s3 = boto3.client(
     aws_session_token=getenv('AWS_SESSION_TOKEN')
 )
 
+
 db = pymysql.connect(
     host=getenv('db_host', 'localhost'),
     port=getenv('db_port', 3306),
@@ -37,8 +38,8 @@ def save_wordcloud_to_s3(cloud_id, wordcloud):
     with NamedTemporaryFile() as tmp:
         wordcloud.to_file(tmp.name + '.png')
         s3_key = f'{cloud_id}.png'
-        s3.upload_file(Filename=tmp.name + '.png', Bucket='wordclouds', Key=s3_key)
-    return s3_key
+        s3.upload_file(Filename=tmp.name + '.png', Bucket='wordclouds', Key=s3_key, ExtraArgs={'ACL': 'public-read'})
+    return f'https://wordclouds.s3-us-west-1.amazonaws.com/{s3_key}'
 
 
 def update_wordcloud_in_db(cloud_id, s3_key):
