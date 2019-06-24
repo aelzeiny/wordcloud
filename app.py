@@ -22,7 +22,8 @@ sqs = boto3.client(
     region_name=os.getenv('AWS_REGION_NAME', 'us-east-1')
 )
 
-db = pymysql.connect(
+
+db_params = dict(
     host=os.getenv('db_host', 'localhost'),
     port=int(os.getenv('db_port', 3306)),
     database='word_clouds',
@@ -53,6 +54,7 @@ def index():
 @app.route('/clouds/<cloud_id>', methods=('GET',))
 @json_response
 def get_wordcloud_status(cloud_id):
+    db = pymysql.connect(**db_params)
     with db.cursor(pymysql.cursors.DictCursor) as cur:
         cur.execute("SELECT * FROM word_cloud WHERE id = %s", (cloud_id,))
         cloud_status = cur.fetchone()
@@ -62,6 +64,7 @@ def get_wordcloud_status(cloud_id):
 @app.route('/clouds', methods=('GET',))
 @json_response
 def list_wordclouds():
+    db = pymysql.connect(**db_params)
     with db.cursor(pymysql.cursors.DictCursor) as cur:
         cur.execute("""
             SELECT
@@ -86,6 +89,7 @@ def process_wordcloud():
     if len(text) > MAX_WORDCLOUD_LENGTH or len(title) >= 256:
         raise ValueError('Title or Text is too long')
     values_tuple = (title, text, False)
+    db = pymysql.connect(**db_params)
     with db.cursor(pymysql.cursors.DictCursor) as cur:
         cur.execute("INSERT INTO word_cloud (title, text, is_generated) VALUES (%s, %s, %s)", values_tuple)
         new_cloud_id = cur.lastrowid
