@@ -3,6 +3,7 @@ from tempfile import NamedTemporaryFile
 import boto3
 import pymysql
 from os import getenv
+import json
 
 s3 = boto3.client(
     's3',
@@ -39,7 +40,7 @@ def save_wordcloud_to_s3(cloud_id, wordcloud):
         wordcloud.to_file(tmp.name + '.png')
         s3_key = f'{cloud_id}.png'
         s3.upload_file(Filename=tmp.name + '.png', Bucket='wordclouds', Key=s3_key, ExtraArgs={'ACL': 'public-read'})
-    return f'https://wordclouds.s3-us-west-1.amazonaws.com/{s3_key}'
+    return f'https://s3.amazonaws.com/wordclouds/{s3_key}'
 
 
 def update_wordcloud_in_db(cloud_id, s3_key):
@@ -67,6 +68,8 @@ def lambda_handler(event, _):
     response = []
     for record in event['Records']:
         payload = record['body']
+        if isinstance(payload, str):
+            payload = json.loads(payload)
         cloud_id = payload['id']
         try:
             text = get_wordcloud_text(cloud_id)
@@ -95,9 +98,9 @@ def lambda_handler(event, _):
     }
 
 
-lambda_handler(
-    {
-        'Records': [{'body': {'id': '1'}}, {'body': {'id': '2'}}, {'body': {'id': '3'}}, {'body': {'id': '4'}}, {'body': {'id': '5'}}, {'body': {'id': '6'}}]
-    },
-    None
-)
+# lambda_handler(
+#     {
+#         'Records': [{'body': {'id': '1'}}, {'body': {'id': '2'}}, {'body': {'id': '3'}}, {'body': {'id': '4'}}, {'body': {'id': '5'}}, {'body': {'id': '6'}}]
+#     },
+#     None
+# )
