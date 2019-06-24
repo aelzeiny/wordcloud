@@ -15,7 +15,7 @@ s3 = boto3.client(
 
 db = pymysql.connect(
     host=getenv('db_host', 'localhost'),
-    port=getenv('db_port', 3306),
+    port=int(getenv('db_port', 3306)),
     database='word_clouds',
     user=getenv('db_user', 'root'),
     passwd=getenv('db_pass', '')
@@ -95,9 +95,9 @@ def lambda_handler(event, _):
     }
 
 
-# lambda_handler(
-#     {
-#         'Records': [{'body': {'id': '1'}}, {'body': {'id': '2'}}, {'body': {'id': '3'}}, {'body': {'id': '4'}}, {'body': {'id': '5'}}, {'body': {'id': '6'}}]
-#     },
-#     None
-# )
+lambda_handler(
+    {
+        'Records': [{'body': {'id': '1'}}, {'body': {'id': '2'}}, {'body': {'id': '3'}}, {'body': {'id': '4'}}, {'body': {'id': '5'}}, {'body': {'id': '6'}}]
+    },
+    None
+)

@@ -1,6 +1,6 @@
 import rp from 'request-promise-native';
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = 'http://ec2-3-82-196-181.compute-1.amazonaws.com:5000';
 
 function request(options) {
     return new Promise((success, failure) => {
