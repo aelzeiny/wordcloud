@@ -18,6 +18,7 @@
 
 #add.active {
     transform: rotate(315deg);
+    margin-right: 13px;
 }
 
 #add:hover, #add:focus {

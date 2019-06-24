@@ -5,7 +5,7 @@ import './wordcloud_card.css';
 class WordCloudCard extends React.Component{
     render() {
         return (
-            <Card style={{ width: '18rem' }}>
+            <Card>
               <Card.Img variant="top" src={this.props.image} />
               <Card.Body>
                 <Card.Title>{this.props.title}</Card.Title>

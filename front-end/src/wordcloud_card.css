@@ -4,4 +4,27 @@
 }
 .card {
     background-color: darkgray;
+    /*width: 20%;*/
+    /*min-width: 18rem;*/
+}
+
+/*// Small devices (landscape phones, 576px and up)*/
+@media (min-width: 576px) {
+    .card {
+        width: 100%;
+    }
+}
+
+/*// Medium devices (tablets, 768px and up)*/
+@media (min-width: 768px) {
+    .card {
+        width: 33%;
+    }
+}
+
+/*// Large devices (desktops, 992px and up)*/
+@media (min-width: 992px) {
+    .card {
+        width: 20%;
+    }
 }

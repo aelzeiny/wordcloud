@@ -51,7 +51,8 @@ class AddForm extends React.Component {
         handleCallback();
     }
 
-    handleSubmit() {
+    handleSubmit(e=null) {
+        if (e) e.preventDefault();
         const formTitle = this.refs.cloudTitle.value;
         const formText = this.refs.cloudText.value;
         createCloud(formTitle, formText)
@@ -81,7 +82,7 @@ class AddForm extends React.Component {
     renderForm() {
         const loremIpsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed...."
         return (
-            <Form>
+            <Form onSubmit={this.handleSubmit}>
                 {this.renderErrors()}
                 <Form.Group controlId="form.title">
                     <Form.Label>Title</Form.Label>
