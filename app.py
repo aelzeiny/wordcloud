@@ -1,13 +1,16 @@
 from functools import wraps
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import boto3
 import os
 import pymysql
 from json import dumps
 from flask_cors import CORS
 
-app = Flask(__name__)
+app = Flask(__name__,
+            static_folder=os.path.abspath("./front-end/build/static"),
+            template_folder=os.path.abspath("./front-end/build"))
 CORS(app, origins="http://localhost:3000")
+MAX_WORDCLOUD_LENGTH = 100000000
 
 
 sqs = boto3.client(
@@ -21,13 +24,11 @@ sqs = boto3.client(
 
 db = pymysql.connect(
     host=os.getenv('db_host', 'localhost'),
-    port=os.getenv('db_port', 3306),
+    port=int(os.getenv('db_port', 3306)),
     database='word_clouds',
     user=os.getenv('db_user', 'root'),
     passwd=os.getenv('db_pass', '')
 )
-
-MAX_WORDCLOUD_LENGTH = 100000000;
 
 
 def json_response(func):
@@ -42,6 +43,11 @@ def json_response(func):
         return jsonify(answer)
 
     return decorator
+
+
+@app.route('/', methods=('GET', ))
+def index():
+    return render_template('index.html')
 
 
 @app.route('/clouds/<cloud_id>', methods=('GET',))
@@ -93,4 +99,4 @@ def process_wordcloud():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0')
